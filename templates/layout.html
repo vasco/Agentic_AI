@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic AI Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="full-width-header">
+        <div class="header-content">
+            <div class="header-logo">
+                <i class="bi bi-braces-asterisk"></i>
+            </div>
+            <h1>Agentic AI</h1>
+        </div>
+    </div>
+    <div class="app-container">
+        <!-- Mobile toggle buttons for small screens -->
+        <button class="mobile-toggle d-lg-none" id="leftSidebarToggle">
+            <i class="bi bi-list"></i>
+        </button>
+        <button class="mobile-toggle d-lg-none" id="rightSidebarToggle">
+            <i class="bi bi-gear"></i>
+        </button>
+        
+        <!-- Left Sidebar - Navigation -->
+        <aside class="left-sidebar">
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <a href="{{ url_for('index') }}" class="nav-link {% if request.path == url_for('index') %}active{% endif %}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Master Dashboard</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <i class="bi bi-robot"></i>
+                        <span>Agents</span>
+                    </div>
+                    <a href="{{ url_for('list_agents') }}" class="nav-link {% if request.path == url_for('list_agents') %}active{% endif %}">
+                        <i class="bi bi-grid"></i>
+                        <span>View All Agents</span>
+                    </a>
+                    <a href="{{ url_for('new_agent') }}" class="nav-link {% if request.path == url_for('new_agent') %}active{% endif %}">
+                        <i class="bi bi-plus-circle"></i>
+                        <span>Create New Agent</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <i class="bi bi-tools"></i>
+                        <span>Tools</span>
+                    </div>
+                    <a href="{{ url_for('list_tools') }}" class="nav-link {% if request.path == url_for('list_tools') %}active{% endif %}">
+                        <i class="bi bi-grid"></i>
+                        <span>View All Tools</span>
+                    </a>
+                    <a href="{{ url_for('new_tool') }}" class="nav-link {% if request.path == url_for('new_tool') %}active{% endif %}">
+                        <i class="bi bi-plus-circle"></i>
+                        <span>Create New Tool</span>
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="theme-toggle">
+                    <button id="themeToggle" class="theme-toggle-btn">
+                        <i class="bi bi-moon-stars"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Center Column - Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <div class="page-title">
+                    {% block page_title %}{% endblock %}
+                </div>
+            </header>
+            
+            <div class="content-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+        
+        <!-- Right Sidebar - Master Config -->
+        <aside class="right-sidebar">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">
+                    <i class="bi bi-gear me-2"></i>
+                    Master Agent Properties
+                </h3>
+            </div>
+            <div class="sidebar-body">
+                {% block right_sidebar %}{% endblock %}
+            </div>
+        </aside>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Theme toggler
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            
+            // Check for saved theme preference or respect OS theme setting
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                body.classList.add('dark-theme');
+                themeToggle.innerHTML = '<i class="bi bi-sun"></i>';
+            }
+            
+            // Theme toggle click handler
+            themeToggle.addEventListener('click', function() {
+                if (body.classList.contains('dark-theme')) {
+                    body.classList.remove('dark-theme');
+                    localStorage.setItem('theme', 'light');
+                    themeToggle.innerHTML = '<i class="bi bi-moon-stars"></i>';
+                } else {
+                    body.classList.add('dark-theme');
+                    localStorage.setItem('theme', 'dark');
+                    themeToggle.innerHTML = '<i class="bi bi-sun"></i>';
+                }
+            });
+            
+            // Mobile sidebar toggles
+            const leftSidebarToggle = document.getElementById('leftSidebarToggle');
+            if (leftSidebarToggle) {
+                leftSidebarToggle.addEventListener('click', function() {
+                    document.querySelector('.left-sidebar').classList.toggle('sidebar-open');
+                    // Close the right sidebar if it's open
+                    document.querySelector('.right-sidebar').classList.remove('sidebar-open');
+                });
+            }
+            
+            const rightSidebarToggle = document.getElementById('rightSidebarToggle');
+            if (rightSidebarToggle) {
+                rightSidebarToggle.addEventListener('click', function() {
+                    document.querySelector('.right-sidebar').classList.toggle('sidebar-open');
+                    // Close the left sidebar if it's open
+                    document.querySelector('.left-sidebar').classList.remove('sidebar-open');
+                });
+            }
+            
+            // Add overlay for mobile to close sidebars when clicking outside
+            const overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            document.body.appendChild(overlay);
+            
+            overlay.addEventListener('click', function() {
+                document.querySelector('.left-sidebar').classList.remove('sidebar-open');
+                document.querySelector('.right-sidebar').classList.remove('sidebar-open');
+                overlay.classList.remove('active');
+            });
+            
+            const checkSidebarStatus = function() {
+                if (document.querySelector('.left-sidebar').classList.contains('sidebar-open') ||
+                    document.querySelector('.right-sidebar').classList.contains('sidebar-open')) {
+                    overlay.classList.add('active');
+                } else {
+                    overlay.classList.remove('active');
+                }
+            };
+            
+            // Add event listeners to track sidebar status
+            const leftSidebar = document.querySelector('.left-sidebar');
+            const rightSidebar = document.querySelector('.right-sidebar');
+            
+            // Use MutationObserver to track class changes
+            const observer = new MutationObserver(checkSidebarStatus);
+            observer.observe(leftSidebar, { attributes: true });
+            observer.observe(rightSidebar, { attributes: true });
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

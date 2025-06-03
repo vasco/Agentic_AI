@@ -1,0 +1,162 @@
+{% extends "layout.html" %}
+
+{% block page_title %}
+<h1>Agent: {{ agent.name }}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="detail-view-header">
+    <div class="edit-mode-toggle">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="editModeToggle">
+            <label class="form-check-label" for="editModeToggle">Edit Mode</label>
+        </div>
+    </div>
+    <div>
+        <a href="{{ url_for('list_agents') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Agents
+        </a>
+    </div>
+</div>
+
+<div id="agentContainer" class="agent-container">
+    <!-- View Mode -->
+    <div class="detail-section">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Agent Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-3">Name</dt>
+                            <dd class="col-sm-9">{{ agent.name }}</dd>
+                            
+                            <dt class="col-sm-3">Description</dt>
+                            <dd class="col-sm-9">{{ agent.description }}</dd>
+                            
+                            <dt class="col-sm-3">LLM Type</dt>
+                            <dd class="col-sm-9">{{ agent.config.get('llm', {}).get('type', 'N/A') }}</dd>
+                            
+                            <dt class="col-sm-3">LLM Model</dt>
+                            <dd class="col-sm-9">{{ agent.config.get('llm', {}).get('model', 'N/A') }}</dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>System Prompt</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre>{{ agent.system_prompt }}</pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Tools</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            {% for tool in agent.tools %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ tool.name }}</span>
+                                <a href="{{ url_for('view_tool', name=tool.name) }}" class="btn btn-sm btn-outline-primary">View</a>
+                            </li>
+                            {% else %}
+                            <li class="list-group-item">No tools available</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Mode -->
+    <div class="edit-section">
+        <div class="card">
+            <div class="card-body">
+                <form id="agentEditForm" method="POST" action="{{ url_for('edit_agent', name=agent.name) }}" class="needs-validation" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ agent.name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required>{{ agent.description }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="system_prompt" class="form-label">System Prompt</label>
+                        <textarea class="form-control" id="system_prompt" name="system_prompt" rows="8" required>{{ agent.system_prompt }}</textarea>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="llm_type" class="form-label">LLM Type</label>
+                            <select class="form-select" id="llm_type" name="llm_type">
+                                <option value="openai" {% if agent.config.get('llm', {}).get('type') == 'openai' %}selected{% endif %}>OpenAI</option>
+                                <option value="anthropic" {% if agent.config.get('llm', {}).get('type') == 'anthropic' %}selected{% endif %}>Anthropic</option>
+                                <option value="deepseek" {% if agent.config.get('llm', {}).get('type') == 'deepseek' %}selected{% endif %}>DeepSeek</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="llm_model" class="form-label">LLM Model</label>
+                            <input type="text" class="form-control" id="llm_model" name="llm_model" value="{{ agent.config.get('llm', {}).get('model', '') }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tools" class="form-label">Tools</label>
+                        <select name="tools" id="tools" multiple class="form-select" size="8">
+                            {% for tool in ToolRegistry.list_tools().values() %}
+                            <option value="{{ tool.name }}" {% if tool.name in [t.name for t in agent.tools] %}selected{% endif %}>{{ tool.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">Hold Ctrl (or Cmd on Mac) to select multiple tools</small>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" id="cancelEditBtn" class="btn btn-outline-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editModeToggle = document.getElementById('editModeToggle');
+    const agentContainer = document.getElementById('agentContainer');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    
+    // Toggle edit mode
+    editModeToggle.addEventListener('change', function() {
+        if (this.checked) {
+            agentContainer.classList.add('editing');
+        } else {
+            agentContainer.classList.remove('editing');
+        }
+    });
+    
+    // Cancel button
+    cancelEditBtn.addEventListener('click', function() {
+        editModeToggle.checked = false;
+        agentContainer.classList.remove('editing');
+    });
+});
+</script>
+{% endblock %}

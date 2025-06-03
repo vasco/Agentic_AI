@@ -1,0 +1,152 @@
+{% extends "layout.html" %}
+
+{% block page_title %}
+<h1>Tool: {{ tool.name }}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="detail-view-header">
+    <div class="edit-mode-toggle">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="editModeToggle">
+            <label class="form-check-label" for="editModeToggle">Edit Mode</label>
+        </div>
+    </div>
+    <div>
+        <a href="{{ url_for('list_tools') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Tools
+        </a>
+    </div>
+</div>
+
+<div id="toolContainer" class="tool-container">
+    <!-- View Mode -->
+    <div class="detail-section">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Tool Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-3">Name</dt>
+                            <dd class="col-sm-9">{{ tool.name }}</dd>
+                            
+                            <dt class="col-sm-3">Description</dt>
+                            <dd class="col-sm-9">{{ tool.description }}</dd>
+                            
+                            <dt class="col-sm-3">Type</dt>
+                            <dd class="col-sm-9">{{ tool.__class__.__name__ }}</dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Tool Schema</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre>{{ schema|tojson(indent=2) }}</pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Used By Agents</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            {% set agents_using = [] %}
+                            {% for agent_name in master_agent.list_agents() %}
+                                {% set agent = master_agent.agents[agent_name] %}
+                                {% for agent_tool in agent.tools %}
+                                    {% if agent_tool.name == tool.name %}
+                                        {% do agents_using.append(agent_name) %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                            
+                            {% if agents_using %}
+                                {% for agent_name in agents_using %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>{{ agent_name }}</span>
+                                    <a href="{{ url_for('view_agent', name=agent_name) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                </li>
+                                {% endfor %}
+                            {% else %}
+                                <li class="list-group-item text-center">No agents are using this tool</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Mode -->
+    <div class="edit-section">
+        <div class="card">
+            <div class="card-body">
+                <form id="toolEditForm" method="POST" action="{{ url_for('edit_tool', name=tool.name) }}" class="needs-validation" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ tool.name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required>{{ tool.description }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tool_type" class="form-label">Tool Type</label>
+                        <input type="text" class="form-control" id="tool_type" name="tool_type" value="{{ tool.__class__.__module__ }}.{{ tool.__class__.__name__ }}" required>
+                        <small class="form-text text-muted">Fully qualified class name (e.g., agent_framework.tools.web_tools.WebSearch)</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="params" class="form-label">Parameters (JSON)</label>
+                        <textarea class="form-control" id="params" name="params" rows="5">{% if hasattr(tool, 'params') %}{{ tool.params|tojson(indent=2) }}{% endif %}</textarea>
+                        <small class="form-text text-muted">Additional parameters in JSON format</small>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" id="cancelEditBtn" class="btn btn-outline-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editModeToggle = document.getElementById('editModeToggle');
+    const toolContainer = document.getElementById('toolContainer');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    
+    // Toggle edit mode
+    editModeToggle.addEventListener('change', function() {
+        if (this.checked) {
+            toolContainer.classList.add('editing');
+        } else {
+            toolContainer.classList.remove('editing');
+        }
+    });
+    
+    // Cancel button
+    cancelEditBtn.addEventListener('click', function() {
+        editModeToggle.checked = false;
+        toolContainer.classList.remove('editing');
+    });
+});
+</script>
+{% endblock %}

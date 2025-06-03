@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ 'Create New Tool' if is_new else 'Edit Tool: ' + tool.name }}</h1>
+    <a href="{{ url_for('list_tools') }}" class="btn btn-outline-secondary">Back to Tools</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" class="needs-validation" novalidate>
+            {{ form.csrf_token }}
+            
+            <div class="mb-3">
+                <label for="name" class="form-label">{{ form.name.label }}</label>
+                {{ form.name(class="form-control", id="name") }}
+                {% if form.name.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.name.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">{{ form.description.label }}</label>
+                {{ form.description(class="form-control", id="description", rows=3) }}
+                {% if form.description.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.description.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="tool_type" class="form-label">{{ form.tool_type.label }}</label>
+                {{ form.tool_type(class="form-control", id="tool_type") }}
+                <small class="form-text text-muted">Example: agent_framework.tools.web_tools.WebSearch</small>
+                {% if form.tool_type.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.tool_type.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="params" class="form-label">{{ form.params.label }}</label>
+                {{ form.params(class="form-control", id="params", rows=8) }}
+                <small class="form-text text-muted">JSON format parameters for tool initialization (optional)</small>
+                {% if form.params.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.params.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mt-4">
+                {{ form.submit(class="btn btn-primary") }}
+                <a href="{{ url_for('list_tools') }}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5>Available Tool Classes</h5>
+    </div>
+    <div class="card-body">
+        <ul class="list-group">
+            <li class="list-group-item">
+                <strong>agent_framework.tools.web_tools.WebSearch</strong>
+                <p class="mb-0 text-muted">Search the web for information</p>
+            </li>
+            <li class="list-group-item">
+                <strong>agent_framework.tools.gmail_sender.GmailSender</strong>
+                <p class="mb-0 text-muted">Send emails via Gmail</p>
+            </li>
+            <li class="list-group-item">
+                <strong>agent_framework.tools.markdown_to_pdf.MarkdownToPDF</strong>
+                <p class="mb-0 text-muted">Convert markdown to PDF documents</p>
+            </li>
+            <!-- Add more tools from your framework as needed -->
+        </ul>
+    </div>
+</div>
+{% endblock %}

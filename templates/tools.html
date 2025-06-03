@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+
+{% block page_title %}
+<h1>Tools</h1>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="page-subtitle">
+        <p class="text-muted">Manage and configure agent tools and capabilities</p>
+    </div>
+    <a href="{{ url_for('new_tool') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-2"></i>Create New Tool
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-tools me-2"></i>
+            <h5 class="mb-0">All Tools</h5>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tool in tools %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="tool-icon me-2">
+                                    <i class="bi bi-gear text-primary"></i>
+                                </div>
+                                <div class="fw-medium">{{ tool.name }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-secondary">{{ tool.description }}</div>
+                        </td>
+                        <td>
+                            <div>
+                                <a href="{{ url_for('view_tool', name=tool.name) }}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-pencil me-1"></i>Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center py-4">
+                            <div class="empty-state">
+                                <i class="bi bi-tools fs-1 mb-3 text-muted"></i>
+                                <p class="mb-0">No tools available</p>
+                                <p class="text-muted small">Create your first tool to get started</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

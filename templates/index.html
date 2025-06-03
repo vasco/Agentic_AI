@@ -1,0 +1,305 @@
+{% extends "layout.html" %}
+
+{% block page_title %}
+<h2 class="mb-2">Master Agent Dashboard</h2>
+{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-chat-dots me-2"></i>
+            <h5 class="mb-0">Submit a Task</h5>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('run_task') }}" class="task-form" id="task-form">
+            {{ form.csrf_token }}
+            <div class="mb-3">
+                <label for="task" class="form-label">{{ form.task.label }}</label>
+                {{ form.task(class="form-control expandable-textarea", rows=1, placeholder="Describe your task here...") }}
+            </div>
+            <button type="submit" class="btn btn-primary" id="submit-task-btn">
+                <span class="btn-text">Submit Task</span>
+                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            </button>
+        </form>
+        
+        <div id="processing-feedback" class="mt-3 d-none">
+            <div class="d-flex flex-column align-items-center justify-content-center p-4">
+                <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                <h6 class="mb-0">Processing your task</h6>
+                <p class="text-muted small mt-2">Results will appear when processing is complete</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const taskForm = document.getElementById('task-form');
+    const taskTextarea = document.querySelector('.expandable-textarea');
+    const submitButton = document.getElementById('submit-task-btn');
+    const processingFeedback = document.getElementById('processing-feedback');
+    
+    if (taskTextarea) {
+        // Expand the textarea when clicked
+        taskTextarea.addEventListener('click', function() {
+            this.classList.add('expanded');
+        });
+        
+        // Also expand when focused using tab navigation
+        taskTextarea.addEventListener('focus', function() {
+            this.classList.add('expanded');
+        });
+        
+        // Always collapse on blur regardless of where click happens
+        taskTextarea.addEventListener('blur', function() {
+            this.classList.remove('expanded');
+        });
+    }
+    
+    // Check if we need to start listening for task updates
+    // This happens if the form was previously submitted but the page hasn't loaded results yet
+    if (localStorage.getItem('taskSubmitted') === 'true') {
+        // Show the processing UI
+        submitButton.classList.add('disabled');
+        submitButton.querySelector('.btn-text').textContent = 'Processing...';
+        submitButton.querySelector('.spinner-border').classList.remove('d-none');
+        processingFeedback.classList.remove('d-none');
+        
+        // Start listening for updates
+        startEventSource();
+    }
+    
+    // Add form submission handler
+    taskForm.addEventListener('submit', function() {
+        // Collapse textarea
+        if (taskTextarea) {
+            taskTextarea.classList.remove('expanded');
+        }
+        
+        // Show loading state
+        submitButton.classList.add('disabled');
+        submitButton.querySelector('.btn-text').textContent = 'Processing...';
+        submitButton.querySelector('.spinner-border').classList.remove('d-none');
+        
+        // Show the centered spinner
+        processingFeedback.classList.remove('d-none');
+        
+        // Set flag to indicate we're waiting for results
+        localStorage.setItem('taskSubmitted', 'true');
+        
+        // Start listening for server events
+        startEventSource();
+    });
+    
+    function startEventSource() {
+        // Create event source for server-sent events
+        const eventSource = new EventSource("{{ url_for('task_progress') }}");
+        
+        // Handle connection open
+        eventSource.onopen = function() {
+            console.log("SSE connection established");
+        };
+        
+        // Handle messages
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'ping') {
+                // Ignore ping messages
+                return;
+            }
+            
+            console.log("Received event:", data.type);
+            
+            if (data.type === 'complete') {
+                // Task is complete, close the connection and refresh the page
+                eventSource.close();
+                localStorage.removeItem('taskSubmitted');
+                window.location.reload();
+            } else if (data.type === 'error') {
+                // Handle error
+                console.error("Task error:", data.message);
+                eventSource.close();
+                localStorage.removeItem('taskSubmitted');
+                // Show error as alert first, then reload to see the error in results
+                alert("Error: " + data.message);
+                window.location.reload();
+            }
+        };
+        
+        // Handle errors
+        eventSource.onerror = function(event) {
+            console.error("SSE connection error:", event);
+            eventSource.close();
+        };
+    }
+});
+</script>
+
+{% if result %}
+<div class="card result-card">
+    <div class="card-header">
+        <div class="d-flex align-items-center">
+            <h5 class="mb-0">Task Result</h5>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="mb-4">
+            <h6 class="fw-bold mb-3">
+                Final Answer
+            </h6>
+            <div class="result-content p-3 rounded">
+                {{ result.answer|safe }}
+            </div>
+        </div>
+        
+        <div class="execution-trace">
+            <h6 class="fw-bold mb-3">
+                Execution Trace
+            </h6>
+            <div class="accordion" id="executionTraceAccordion">
+                {% for step in result.execution_trace %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ loop.index }}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+                            <span class="step-number me-2">{{ step.step }}</span>
+                            <span class="step-title">{% if step.task %}{{ step.task }}{% else %}{{ step.action }}{% endif %}</span>
+                        </button>
+                    </h2>
+                    <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#executionTraceAccordion">
+                        <div class="accordion-body">
+                            {% if step.agent %}
+                            <div class="trace-item mb-3">
+                                <div class="trace-label">Agent</div>
+                                <div class="trace-value">{{ step.agent }}</div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if step.input %}
+                            <div class="trace-item mb-3">
+                                <div class="trace-label">Input</div>
+                                <pre>{{ step.input }}</pre>
+                            </div>
+                            {% endif %}
+                            
+                            {% if step.result %}
+                            <div class="trace-item mb-3">
+                                <div class="trace-label">Result</div>
+                                <pre>{{ step.result|default('', true) }}</pre>
+                            </div>
+                            {% endif %}
+                            
+                            {% if step.details %}
+                            <div class="trace-item">
+                                <div class="trace-label">Details</div>
+                                <pre>{{ step.details }}</pre>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block right_sidebar %}
+<div class="card">
+    <div class="card-body">
+        <div class="detail-view-header">
+            <span></span>
+            <div class="edit-mode-toggle">
+                <label class="form-check-label me-2" for="editModeToggle">Edit Mode</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="editModeToggle">
+                </div>
+            </div>
+        </div>
+        
+        <!-- View Section -->
+        <div class="detail-section">
+            <div class="mb-3">
+                <small class="text-muted d-block mb-1">Name</small>
+                <p class="mb-0 fw-bold">{{ config.name }}</p>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted d-block mb-1">Description</small>
+                <p class="mb-0">{{ config.description }}</p>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted d-block mb-1">LLM Model</small>
+                <p class="mb-0">{{ config.llm.model }}</p>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted d-block mb-1">LLM Type</small>
+                <p class="mb-0">{{ config.llm.type }}</p>
+            </div>
+            <div>
+                <small class="text-muted d-block mb-1">System Prompt</small>
+                <pre class="system-prompt-display">{{ config.system_prompt }}</pre>
+            </div>
+        </div>
+        
+        <!-- Edit Section -->
+        <div class="edit-section">
+            <form method="POST" action="{{ url_for('update_master_config') }}">
+                {{ config_form.csrf_token }}
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ config.name }}">
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <input type="text" class="form-control" id="description" name="description" value="{{ config.description }}">
+                </div>
+                <div class="mb-3">
+                    <label for="llm_model" class="form-label">LLM Model</label>
+                    <input type="text" class="form-control" id="llm_model" name="llm_model" value="{{ config.llm.model }}">
+                </div>
+                <div class="mb-3">
+                    <label for="llm_type" class="form-label">LLM Type</label>
+                    <select class="form-select" id="llm_type" name="llm_type">
+                        <option value="openai" {% if config.llm.type == 'openai' %}selected{% endif %}>OpenAI</option>
+                        <option value="anthropic" {% if config.llm.type == 'anthropic' %}selected{% endif %}>Anthropic</option>
+                        <option value="deepseek" {% if config.llm.type == 'deepseek' %}selected{% endif %}>DeepSeek</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="system_prompt" class="form-label">System Prompt</label>
+                    <textarea class="form-control" id="system_prompt" name="system_prompt" rows="8">{{ config.system_prompt }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const editModeToggle = document.getElementById('editModeToggle');
+        const configCard = editModeToggle.closest('.card');
+        
+        editModeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                configCard.classList.add('editing');
+            } else {
+                configCard.classList.remove('editing');
+            }
+        });
+        
+        // System prompt expand/collapse functionality
+        const systemPromptDisplay = document.querySelector('.system-prompt-display');
+        if (systemPromptDisplay) {
+            systemPromptDisplay.addEventListener('click', function() {
+                this.classList.toggle('expanded');
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ 'Create New Agent' if is_new else 'Edit Agent: ' + agent.name }}</h1>
+    <a href="{{ url_for('list_agents') }}" class="btn btn-outline-secondary">Back to Agents</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" class="needs-validation" novalidate>
+            {{ form.csrf_token }}
+            
+            <div class="mb-3">
+                <label for="name" class="form-label">{{ form.name.label }}</label>
+                {{ form.name(class="form-control", id="name") }}
+                {% if form.name.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.name.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">{{ form.description.label }}</label>
+                {{ form.description(class="form-control", id="description", rows=3) }}
+                {% if form.description.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.description.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="system_prompt" class="form-label">{{ form.system_prompt.label }}</label>
+                {{ form.system_prompt(class="form-control", id="system_prompt", rows=8) }}
+                {% if form.system_prompt.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.system_prompt.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="llm_type" class="form-label">{{ form.llm_type.label }}</label>
+                    {{ form.llm_type(class="form-select", id="llm_type") }}
+                    {% if form.llm_type.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.llm_type.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-6">
+                    <label for="llm_model" class="form-label">{{ form.llm_model.label }}</label>
+                    {{ form.llm_model(class="form-control", id="llm_model") }}
+                    {% if form.llm_model.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.llm_model.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="tools" class="form-label">{{ form.tools.label }}</label>
+                <select name="tools" id="tools" multiple class="form-select" size="8">
+                    {% for choice in form.tools.choices %}
+                    <option value="{{ choice[0] }}" {% if choice[0] in form.tools.data %}selected{% endif %}>{{ choice[1] }}</option>
+                    {% endfor %}
+                </select>
+                <small class="form-text text-muted">Hold Ctrl (or Cmd on Mac) to select multiple tools</small>
+                {% if form.tools.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.tools.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mt-4">
+                {{ form.submit(class="btn btn-primary") }}
+                <a href="{{ url_for('list_agents') }}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
