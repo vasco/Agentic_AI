@@ -1,12 +1,12 @@
 # Agentic AI Framework
 
-Este projeto é um framework de agentes de IA que permite coordenar múltiplos agentes especializados para resolver tarefas complexas.
+This project is an AI agent framework that allows coordinating multiple specialized agents to solve complex tasks.
 
-## Créditos e Licença
+## Credits and License
 
-Este código e licença pertencem a **João Melo de Jesus**.
+This code and license belong to **João Melo de Jesus**.
 
-## Como executar
+## How to Run
 
 ### Web Interface
 ```bash
@@ -18,22 +18,22 @@ python app.py
 python main.py 'run-master' 'What is Agentic AI, and What Are Its Types? How Does It Benefit Financial Services? Write a report about it, save it in pdf format and send it to joao.melo.jesus@gmail.com'
 ```
 
-## Instalação
+## Installation
 
-### 1. Clone o repositório
+### 1. Clone the repository
 ```bash
 git clone <repository-url>
 cd Agentic_AI
 ```
 
-### 2. Instale as dependências
-Vais precisar de uns quantos pip install:
+### 2. Install dependencies
+You will need to install several packages:
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configure as API Keys
-Crie um arquivo `.env` na raiz do projeto e adicione suas chaves de API:
+### 3. Configure API Keys
+Create a `.env` file in the project root and add your API keys:
 
 ```env
 # OpenAI API Configuration
@@ -56,11 +56,11 @@ GMAIL_APP_PASSWORD=your_gmail_app_password_here
 SECRET_KEY=your_secret_key_for_flask
 ```
 
-**Importante:** Você precisará colocar as api keys no .env conforme mostrado acima.
+**Important:** You need to set up the API keys in the .env file as shown above.
 
-### 4. Dependências adicionais do sistema
+### 4. Additional system dependencies
 
-Para a conversão de PDF, você pode precisar instalar o `wkhtmltopdf`:
+For PDF conversion, you may need to install `wkhtmltopdf`:
 
 #### Ubuntu/Debian:
 ```bash
@@ -73,77 +73,77 @@ brew install wkhtmltopdf
 ```
 
 #### Windows:
-Baixe e instale de: https://wkhtmltopdf.org/downloads.html
+Download and install from: https://wkhtmltopdf.org/downloads.html
 
-## Estrutura do Projeto
+## Project Structure
 
-- `app.py` - Interface web Flask
-- `main.py` - Interface de linha de comando
-- `agent_framework/` - Framework principal dos agentes
-  - `master_agent.py` - Agente coordenador principal
-  - `agent.py` - Classe base para agentes individuais
-  - `tools/` - Ferramentas disponíveis para os agentes
-  - `llm_providers/` - Provedores de modelos de linguagem
-- `agents/` - Configurações dos agentes especializados
-- `templates/` - Templates HTML para a interface web
-- `static/` - Arquivos estáticos (CSS, JS)
-- `output/` - Diretório para arquivos de saída (PDFs, etc.)
+- `app.py` - Flask web interface
+- `main.py` - Command line interface
+- `agent_framework/` - Main agent framework
+  - `master_agent.py` - Main coordinator agent
+  - `agent.py` - Base class for individual agents
+  - `tools/` - Available tools for agents
+  - `llm_providers/` - Language model providers
+- `agents/` - Specialized agent configurations
+- `templates/` - HTML templates for web interface
+- `static/` - Static files (CSS, JS)
+- `output/` - Directory for output files (PDFs, etc.)
 
-## Comandos Disponíveis
+## Available Commands
 
-### Setup inicial
+### Initial setup
 ```bash
 python main.py setup
 ```
 
-### Criar novo agente
+### Create new agent
 ```bash
-python main.py create-agent "Nome do Agente" "Descrição detalhada do que o agente deve fazer"
+python main.py create-agent "Agent Name" "Detailed description of what the agent should do"
 ```
 
-### Criar nova ferramenta
+### Create new tool
 ```bash
-python main.py create-tool "nome_da_ferramenta" "Descrição da ferramenta"
+python main.py create-tool "tool_name" "Tool description"
 ```
 
-### Executar agente único
+### Run single agent
 ```bash
-python main.py run-agent config/agente.yaml "Sua consulta aqui"
+python main.py run-agent config/agent.yaml "Your query here"
 ```
 
-### Executar master agent
+### Run master agent
 ```bash
-python main.py run-master "Sua consulta complexa aqui"
+python main.py run-master "Your complex query here"
 ```
 
-### Iniciar interface web
+### Start web interface
 ```bash
 python main.py web
 ```
 
-## Funcionalidades
+## Features
 
-- **Agentes Especializados**: Pesquisador, Programador, Escritor
-- **Coordenação Inteligente**: Master agent que coordena múltiplos agentes
-- **Ferramentas Integradas**: 
-  - Busca na web
-  - Raspagem de websites
-  - Envio de emails
-  - Conversão Markdown para PDF
-- **Interface Web**: Interface amigável para gerenciar agentes e tarefas
-- **API Keys Seguras**: Configuração via variáveis de ambiente
-- **Suporte a Múltiplos LLMs**: OpenAI, Anthropic, DeepSeek
+- **Specialized Agents**: Researcher, Coder, Writer
+- **Intelligent Coordination**: Master agent that coordinates multiple agents
+- **Integrated Tools**: 
+  - Web search
+  - Website scraping
+  - Email sending
+  - Markdown to PDF conversion
+- **Web Interface**: User-friendly interface to manage agents and tasks
+- **Secure API Keys**: Configuration via environment variables
+- **Multiple LLM Support**: OpenAI, Anthropic, DeepSeek
 
-## Exemplo de Uso
+## Usage Example
 
-O framework pode ser usado para tarefas complexas como:
-- Pesquisar informações sobre um tópico
-- Escrever relatórios baseados na pesquisa
-- Converter o relatório para PDF
-- Enviar o resultado por email
+The framework can be used for complex tasks such as:
+- Research information on a topic
+- Write reports based on research
+- Convert reports to PDF
+- Send results via email
 
-Todo o processo é automatizado através da coordenação inteligente dos agentes especializados.
+The entire process is automated through intelligent coordination of specialized agents.
 
-## Contato
+## Contact
 
-Para dúvidas ou suporte, entre em contato com João Melo de Jesus: joao.melo.jesus@gmail.com 
+For questions or support, contact João Melo de Jesus: joao.melo.jesus@gmail.com 
