@@ -6,7 +6,9 @@ This project is an AI agent framework that allows coordinating multiple speciali
 
 This code and license belong to **João Melo de Jesus**.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This is proprietary, closed-source software. All rights reserved. See the [LICENSE](LICENSE) file for details.
+
+For permission requests, contact: joao.melo.jesus@gmail.com
 
 ## How to Run
 
