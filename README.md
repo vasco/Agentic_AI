@@ -6,6 +6,8 @@ This project is an AI agent framework that allows coordinating multiple speciali
 
 This code and license belong to **João Melo de Jesus**.
 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ## How to Run
 
 ### Web Interface
